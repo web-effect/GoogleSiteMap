@@ -42,6 +42,7 @@ class GoogleSiteMap {
         $corePath = $this->modx->getOption('googlesitemap.core_path',null,$this->modx->getOption('core_path').'components/googlesitemap/');
         $this->config = array_merge(array(
             'allowedtemplates' => '',
+			'excludeTemplates' => '',
             'context' => '',
             'googleSchema' => 'http://www.sitemaps.org/schemas/sitemap/0.9',
             'hideDeleted' => true,
@@ -193,6 +194,15 @@ class GoogleSiteMap {
             $c->innerJoin('modTemplate','Template');
             $c->where(array(
                 'Template.'.$this->config['templateFilter'].':IN' => $tpls,
+            ));
+        }
+		
+		/* if excluding templates */
+        if (!empty($this->config['excludeTemplates'])) {
+            $tpls = $this->prepareForIn($this->config['excludeTemplates']);
+            $c->innerJoin('modTemplate','Template');
+            $c->where(array(
+                'Template.'.$this->config['templateFilter'].':NOT IN' => $tpls,
             ));
         }
 
