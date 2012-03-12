@@ -60,6 +60,7 @@ class GoogleSiteMap {
             'excludeChildrenOf' => '',
             'showHidden' => false,
             'priorityTV' => 0,
+            'excludeTV' => '',
         ),$config);
     }
 
@@ -97,6 +98,11 @@ class GoogleSiteMap {
             }
             if (empty($this->config['showHidden'])) {
                 $canParse = $canParse && (!$child->get('hidemenu') || $child->get('class_key') == 'Article');
+            }
+
+            /* if using an exclude tv */
+            if (!empty($this->config['excludeTV'])) {
+                $canParse = $canParse && ($child->getTVValue($this->config['excludeTV']) != '1');
             }
 
             if ($canParse) {
