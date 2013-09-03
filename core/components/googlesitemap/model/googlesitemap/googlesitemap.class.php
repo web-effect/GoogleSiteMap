@@ -128,6 +128,7 @@ class GoogleSiteMap {
                 }
                 /* add item to output */
                 $output .= $this->getChunk($this->config['itemTpl'],array(
+                    'id' => $id,
                     'url' => $url,
                     'date' => $date,
                     'update' => $update,
