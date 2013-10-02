@@ -78,32 +78,38 @@ class GoogleSiteMap {
 
         /* get children */
         $c = $this->getQuery($currentParent);
-        $children = $this->modx->getCollection('modResource',$c);
+        if ($c->prepare() && $c->stmt->execute()) {
+            $children = $c->stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+        else {
+            $children = array();
+            $this->modx->log(modX::LOG_LEVEL_ERROR, print_r($c->stmt->errorInfo(),true));
+        }
 
-        /** @var modResource $child */
+        /** @var array $child */
         foreach ($children as $child) {
-            $id = $child->get('id');
+            $id = $child['id'];
             if ($selfId == $id) continue;
 
             $canParse = true;
             if ($this->config['searchable']) {
-                $canParse = $canParse && $child->get('searchable');
+                $canParse = $canParse && $child['searchable'];
             }
             if ($this->config['published']) {
-                $canParse = $canParse && $child->get('published');
+                $canParse = $canParse && $child['published'];
             }
             if ($this->config['hideDeleted']) {
-                $canParse = $canParse && !$child->get('deleted');
+                $canParse = $canParse && !$child['deleted'];
             }
             if (empty($this->config['showHidden'])) {
-                $canParse = $canParse && (!$child->get('hidemenu') || $child->get('class_key') == 'Article');
+                $canParse = $canParse && (!$child['hidemenu'] || $child['class_key'] == 'Article' || $child['class_key'] == 'Ticket');
             }
 
             if ($canParse) {
                 $url = $this->modx->makeUrl($id,'','','full');
 
-                $date = $child->get('editedon') ? $child->get('editedon') : $child->get('createdon');
-                $date = date("Y-m-d", strtotime($date));
+                $date = $child['editedon'] ? $child['editedon'] : $child['createdon'];
+                $date = date("Y-m-d", $date);
 
                 /* Get the date difference */
                 $datediff = datediff("d", $date, date("Y-m-d"));
@@ -120,11 +126,8 @@ class GoogleSiteMap {
                     $priority = '0.25';
                     $update = 'monthly';
                 }
-                if (!empty($this->config['priorityTV'])) {
-                    $priorityTV = $child->getTVValue($this->config['priorityTV']);
-                    if (!empty($priorityTV)) {
-                        $priority = $priorityTV;
-                    }
+                if (!empty($child['priorityTV'])) {
+                    $priority = $child['priorityTV'];
                 }
                 /* add item to output */
                 $output .= $this->getChunk($this->config['itemTpl'],array(
@@ -137,8 +140,8 @@ class GoogleSiteMap {
             }
 
             /* if children, recurse */
-            if ($child->get('children') > 0) {
-                $output .= $this->run($child->get('id'),$selfId,$depth+1);
+            if ($child['children'] > 0) {
+                $output .= $this->run($child['id'],$selfId,$depth+1);
             }
         }
         return $output;
@@ -148,13 +151,34 @@ class GoogleSiteMap {
         /* build query */
         $c = $this->modx->newQuery('modResource');
         $c->leftJoin('modResource','Children');
-        $c->select($this->modx->getSelectColumns('modResource','modResource'));
+        $c->select($this->modx->getSelectColumns('modResource','modResource','',array('content'),true));
         $c->select(array(
             'COUNT(Children.id) AS children',
         ));
         $c->where(array(
             'parent' => $currentParent,
         ));
+
+        /* if using priorityTV */
+        if (!empty($this->config['priorityTV'])) {
+            $tv = trim($this->config['priorityTV']);
+            if (is_numeric($tv)) {
+                $c->leftJoin('modTemplateVarResource', 'modTemplateVarResource', array(
+                    '`modTemplateVarResource`.`tmplvarid` = '.$tv,
+                    '`modTemplateVarResource`.`contentid` = `modResource`.`id`'
+                ));
+            }
+            else {
+                $c->leftJoin('modTemplateVar', 'modTemplateVar', array(
+                    '`modTemplateVar`.`name` = "'.$tv.'"',
+                ));
+                $c->leftJoin('modTemplateVarResource', 'modTemplateVarResource', array(
+                    '`modTemplateVarResource`.`tmplvarid` = `modTemplateVar`.`id`',
+                    '`modTemplateVarResource`.`contentid` = `modResource`.`id`',
+                ));
+            }
+            $c->select('`modTemplateVarResource`.`value` as `priorityTV`');
+        }
 
         /* if restricting to contexts */
         if (!empty($this->config['context'])) {
@@ -245,11 +269,14 @@ class GoogleSiteMap {
                 if ($chunk == false) return false;
             }
             $this->chunks[$name] = $chunk->getContent();
-        } else {
-            $o = $this->chunks[$name];
-            $chunk = $this->modx->newObject('modChunk');
-            $chunk->setContent($o);
         }
+        $pls = $this->makePlaceholders($properties);
+        $tmp = $this->chunks[$name];
+        $content = str_replace($pls['pl'], $pls['vl'], $tmp);
+
+        /* @var modChunk $chunk */
+        $chunk = $this->modx->newObject('modChunk');
+        $chunk->setContent($content);
         $chunk->setCacheable(false);
         return $chunk->process($properties);
     }
@@ -274,6 +301,29 @@ class GoogleSiteMap {
             $chunk->setContent($o);
         }
         return $chunk;
+    }
+
+    /**
+     * Prepares data for replacement in chunk
+     *
+     * @param array $properties Array with keys and values
+     * @return array $result Two nested arrays with placeholders and values
+     */
+    public function makePlaceholders(array $properties = array(), $prefix = '') {
+        $result = array(
+            'pl' => array(),
+            'vl' => array()
+        );
+        foreach ($properties as $k => $v) {
+            if (is_array($v)) {
+                $result = array_merge_recursive($result, $this->makePlaceholders($v, $k.'.'));
+            }
+            else {
+                $result['pl'][$prefix.$k] = '[[+'.$prefix.$k.']]';
+                $result['vl'][$prefix.$k] = $v;
+            }
+        }
+        return $result;
     }
 }
 
