@@ -35,7 +35,7 @@ set_time_limit(0);
 
 define('PKG_NAME','GoogleSiteMap');
 define('PKG_NAME_LOWER',strtolower(PKG_NAME));
-define('PKG_VERSION','1.3.1');
+define('PKG_VERSION','1.3.2');
 define('PKG_RELEASE','pl');
 
 $root = dirname(dirname(__FILE__)).'/';
@@ -100,6 +100,10 @@ $vehicle = $builder->createVehicle($category,$attr);
 $vehicle->resolve('file',array(
     'source' => $sources['source_core'],
     'target' => "return MODX_CORE_PATH . 'components/';",
+));
+$vehicle->resolve('file',array(
+    'source' => $sources['source_assets'],
+    'target' => "return MODX_ASSETS_PATH . 'components/';",
 ));
 $builder->putVehicle($vehicle);
 
