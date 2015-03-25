@@ -38,4 +38,5 @@ $startId = (int)$modx->getOption('startId',$scriptProperties,0);
 return $GoogleSiteMap->getChunk($containerTpl,array(
     'schema' => $googleSchema,
     'items' => $GoogleSiteMap->run($startId),
+    'assets_url' => $GoogleSiteMap->config['assetsUrl']
 ));
