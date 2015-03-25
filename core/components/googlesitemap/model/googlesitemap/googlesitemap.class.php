@@ -29,6 +29,8 @@ class GoogleSiteMap {
     public $modx;
     /** @var array $chunks */
     public $chunks = array();
+    /** @var array $config */
+    public $config = array();
 
     /**
      * Creates an instance of the GoogleSiteMap class.
@@ -40,7 +42,10 @@ class GoogleSiteMap {
         $this->modx =& $modx;
 
         $corePath = $this->modx->getOption('googlesitemap.core_path',null,$this->modx->getOption('core_path').'components/googlesitemap/');
+        $assetsUrl = $this->modx->getOption('googlesitemap.assets_url', null, $this->modx->getOption('assets_url') . 'components/googlesitemap/');
+
         $this->config = array_merge(array(
+            'assetsUrl' => $assetsUrl,
             'allowedtemplates' => '',
 			'excludeTemplates' => '',
             'context' => '',
