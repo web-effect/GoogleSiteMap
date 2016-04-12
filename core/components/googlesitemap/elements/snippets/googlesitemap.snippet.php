@@ -37,7 +37,7 @@ $options = array(
 
 // Set context(s)
 $context = array_filter(array_map('trim', explode(',', $modx->getOption('context', $scriptProperties, $modx->context->get('key'), true))));
-$cacheKey .= '-' . implode('-', $context);
+$cacheKey .= '.' . md5($modx->toJSON($scriptProperties));
 
 // Fetch from cache
 $output = null;
