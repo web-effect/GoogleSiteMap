@@ -37,7 +37,7 @@ $options = array(
 
 // Set context(s)
 $context = array_filter(array_map('trim', explode(',', $modx->getOption('context', $scriptProperties, $modx->context->get('key'), true))));
-$cacheKey .= implode('-', $context);
+$cacheKey .= '-' . implode('-', $context);
 
 // Fetch from cache
 $output = null;
@@ -50,7 +50,7 @@ $legacyProps = array_flip(array_filter(array_map('trim', explode(',', $legacyPro
 $legacyProps = array_intersect_key($scriptProperties, $legacyProps);
 $legacySnippet = $modx->getOption('legacySnippet', $scriptProperties, 'GoogleSiteMapVersion1');
 
-if (!empty($legacyProps) && $xpdo->getCount('modSnippet', array('name' => $legacySnippet))) {
+if (!empty($legacyProps) && $modx->getCount('modSnippet', array('name' => $legacySnippet))) {
     
     $output = $modx->runSnippet($legacySnippet, $scriptProperties);
     if ($output !== null) {
@@ -65,18 +65,18 @@ $googleSchema = $modx->getOption('googleSchema',$scriptProperties,'http://www.si
 
 /* Map specified filter properties to new variables for convenience */
 $filters = array();
-$filters['deleted'] = ($modx->getOption('hideDeleted', $scriptProperties, true)) ? 's.deleted = 0' : '';
-$filters['hidden'] = ($modx->getOption('showHidden', $scriptProperties, false)) ? '' : 's.hidemenu = 0';
-$filters['published'] = ($modx->getOption('published', $scriptProperties, true)) ? 's.published = 1' : '';
-$filters['searchable'] = ($modx->getOption('searchable', $scriptProperties, true)) ? 's.searchable = 1' : '';
-$criteria = implode(' AND ', $filters);
+$filters['deleted'] = ($modx->getOption('hideDeleted', $scriptProperties, true)) ? 's.deleted = 0' : false;
+$filters['hidemenu'] = ($modx->getOption('showHidden', $scriptProperties, false)) ? false : 's.hidemenu = 0';
+$filters['published'] = ($modx->getOption('published', $scriptProperties, true)) ? 's.published = 1' : false;
+$filters['searchable'] = ($modx->getOption('searchable', $scriptProperties, true)) ? 's.searchable = 1' : false;
+$criteria = implode(' AND ', array_filter($filters));
 
 $sortBy = $modx->getOption('sortBy', $scriptProperties, 'menuindex');
 $sortDir = $modx->getOption('sortDir', $scriptProperties, 'ASC');
 $orderby = 's.' . strtolower($sortBy) . ' ' . strtoupper($sortDir);
 
 $containerTpl = $modx->getOption('containerTpl',$scriptProperties,'gContainer');
-$priorityTV = $modx->getOption('priorityTV', $scriptProperties, '');
+$priorityTV = (int) $modx->getOption('priorityTV', $scriptProperties, '');
 
 /* Query by Context and set site_url / site_start */
 $items = '';
@@ -94,7 +94,7 @@ foreach ($context as $ctx) {
     } 
     if (empty($siteUrl)) {
         // We need something to build the links with, even if no context setting
-        $siteUrl = $modx->getOption('site_url');
+        $siteUrl = $modx->getOption('site_url', null, MODX_SITE_URL);
     }
     
     // Add all resources that meet criteria
@@ -104,11 +104,18 @@ foreach ($context as $ctx) {
                 '<url>',        
                 CONCAT('<loc>" . $siteUrl . "',uri,'</loc>'),
                 CONCAT('<lastmod>',FROM_UNIXTIME(editedon, '%Y-%m-%d'),'</lastmod>'),
+                IFNULL(
+                    CONCAT('<priority>',(
+                        SELECT value
+                        FROM modx_site_tmplvar_contentvalues
+                        USE INDEX (tv_cnt)
+                        WHERE contentid=id AND tmplvarid={$priorityTV}
+                    ),'</priority>'),''),
                 '</url>'
                 SEPARATOR ''
             ) AS node
         FROM modx_site_content AS s
-        WHERE " . $criteria . " AND s.context_key='" . $ctx . "'
+        WHERE " . $criteria . " AND context_key='" . $ctx . "'
         GROUP BY s.id
         ORDER BY " . $orderby . "
     ");
