@@ -1,6 +1,6 @@
 <?php
 /**
- * GoogleSiteMap
+ * GoogleSiteMap (Version 1x)
  *
  * Copyright 2009-2010 by Shaun McCormick <shaun@modx.com>
  *
