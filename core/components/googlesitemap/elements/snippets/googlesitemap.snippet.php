@@ -36,7 +36,7 @@ $options = array(
 );
 
 // Set context(s)
-$context = array_filter(array_map('trim', explode(',', $modx->getOption('context', $scriptProperties, $modx->context->get('key')))));
+$context = array_filter(array_map('trim', explode(',', $modx->getOption('context', $scriptProperties, $modx->context->get('key'), true))));
 $cacheKey .= implode('-', $context);
 
 // Fetch from cache
@@ -69,6 +69,7 @@ $filters['deleted'] = ($modx->getOption('hideDeleted', $scriptProperties, true))
 $filters['hidden'] = ($modx->getOption('showHidden', $scriptProperties, false)) ? '' : 's.hidemenu = 0';
 $filters['published'] = ($modx->getOption('published', $scriptProperties, true)) ? 's.published = 1' : '';
 $filters['searchable'] = ($modx->getOption('searchable', $scriptProperties, true)) ? 's.searchable = 1' : '';
+$criteria = implode(' AND ', $filters);
 
 $sortBy = $modx->getOption('sortBy', $scriptProperties, 'menuindex');
 $sortDir = $modx->getOption('sortDir', $scriptProperties, 'ASC');
@@ -95,9 +96,6 @@ foreach ($context as $ctx) {
         // We need something to build the links with, even if no context setting
         $siteUrl = $modx->getOption('site_url');
     }
-    
-    $filters['context_key'] = 's.context_key = ' . $ctx;
-    $criteria = implode(' AND ', $filters);
     
     // Add all resources that meet criteria
     $stmt = $modx->query("
@@ -128,3 +126,8 @@ $output = $modx->getChunk($containerTpl, array(
     'schema' => $googleSchema,
     'items' => $items,
 ));
+
+if ($output !== null) {
+    $modx->cacheManager->set($cacheKey, $output, $expires, $options);
+    return $output;
+}
