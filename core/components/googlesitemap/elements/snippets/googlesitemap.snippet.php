@@ -75,7 +75,7 @@ $sortBy = $modx->getOption('sortBy', $scriptProperties, 'menuindex');
 $sortDir = $modx->getOption('sortDir', $scriptProperties, 'ASC');
 $orderby = 's.' . strtolower($sortBy) . ' ' . strtoupper($sortDir);
 
-$containerTpl = $modx->getOption('containerTpl',$scriptProperties,'gContainer');
+$containerTpl = $modx->getOption('containerTpl', $scriptProperties, 'gContainer');
 $priorityTV = (int) $modx->getOption('priorityTV', $scriptProperties, '');
 
 /* Query by Context and set site_url / site_start */
@@ -109,7 +109,7 @@ foreach ($context as $ctx) {
                         SELECT value
                         FROM modx_site_tmplvar_contentvalues
                         USE INDEX (tv_cnt)
-                        WHERE contentid=id AND tmplvarid={$priorityTV}
+                        WHERE contentid=id AND tmplvarid=" . $priorityTV . "
                     ),'</priority>'),''),
                 '</url>'
                 SEPARATOR ''
@@ -137,4 +137,6 @@ $output = $modx->getChunk($containerTpl, array(
 if ($output !== null) {
     $modx->cacheManager->set($cacheKey, $output, $expires, $options);
     return $output;
+} else {
+    $modx->log(modX::LOG_LEVEL_WARN, 'GoogleSiteMap could not generate nor fetch a sitemap.');
 }
