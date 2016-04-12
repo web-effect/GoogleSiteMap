@@ -69,14 +69,22 @@ $filters['deleted'] = ($modx->getOption('hideDeleted', $scriptProperties, true))
 $filters['hidemenu'] = ($modx->getOption('showHidden', $scriptProperties, false)) ? false : 's.hidemenu = 0';
 $filters['published'] = ($modx->getOption('published', $scriptProperties, true)) ? 's.published = 1' : false;
 $filters['searchable'] = ($modx->getOption('searchable', $scriptProperties, true)) ? 's.searchable = 1' : false;
-$criteria = implode(' AND ', array_filter($filters));
 
 $sortBy = $modx->getOption('sortBy', $scriptProperties, 'menuindex');
 $sortDir = $modx->getOption('sortDir', $scriptProperties, 'ASC');
 $orderby = 's.' . strtolower($sortBy) . ' ' . strtoupper($sortDir);
 
 $containerTpl = $modx->getOption('containerTpl', $scriptProperties, 'gContainer');
-$priorityTV = (int) $modx->getOption('priorityTV', $scriptProperties, '');
+$priorityTV = $modx->getOption('priorityTV', $scriptProperties, '');
+
+if (!is_numeric($priorityTV)) {
+    
+    $c = $modx->newQuery('modTemplateVar');
+    $c->select('id');
+    $c->where(array('name' => $priorityTV));
+    $priorityTV = $modx->getValue($c->prepare());
+    
+}
 
 /* Query by Context and set site_url / site_start */
 $items = '';
@@ -97,6 +105,8 @@ foreach ($context as $ctx) {
         $siteUrl = $modx->getOption('site_url', null, MODX_SITE_URL);
     }
     
+    $filters['context_key'] = "context_key = '{$ctx}'";
+    $criteria = implode(' AND ', array_filter($filters));
     // Add all resources that meet criteria
     $stmt = $modx->query("
         SELECT
@@ -109,17 +119,17 @@ foreach ($context as $ctx) {
                         SELECT value
                         FROM modx_site_tmplvar_contentvalues
                         USE INDEX (tv_cnt)
-                        WHERE contentid=id AND tmplvarid=" . $priorityTV . "
+                        WHERE contentid = id AND tmplvarid = " . $priorityTV . "
                     ),'</priority>'),''),
                 '</url>'
                 SEPARATOR ''
             ) AS node
         FROM modx_site_content AS s
-        WHERE " . $criteria . " AND context_key='" . $ctx . "'
+        WHERE " . $criteria . "
         GROUP BY s.id
         ORDER BY " . $orderby . "
     ");
-    
+
     // Add to output
     if ($stmt) {
         $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
