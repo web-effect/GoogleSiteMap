@@ -51,3 +51,4 @@ $_lang['prop_gsm.cacheprefix_desc'] = 'Optional. Default: "googlesitemap". Prefi
 $_lang['prop_gsm.cachepartition_desc'] = 'Optional. Default: "googlesitemap". Folder under core/cache/ for cache file(s).';
 $_lang['prop_gsm.cacheexpires_desc'] = 'Optional. Default: 86400. Time to expire cache. Default is 1 day.';
 $_lang['prop_gsm.legacyprops_desc'] = 'Only modify this if you really know what you are doing. Properties in this list will trigger the execution of the legacy GoogleSiteMap Snippet.';
+$_lang['prop_gsm.legacysnippet_desc'] = 'Only modify this if you really know what you are doing. This snippet will be called if a legacy property is passed to the call to GoogleSiteMap';
