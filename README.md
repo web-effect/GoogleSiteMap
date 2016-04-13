@@ -20,3 +20,5 @@ Examples:
 
 This project is managed at: [https://github.com/modxcms/GoogleSiteMap](http://github.com/modxcms/GoogleSiteMap).
 
+Read or contribute to the documentation here: [https://rtfm.modx.com/extras/revo/googlesitemap](https://rtfm.modx.com/extras/revo/googlesitemap).
+
