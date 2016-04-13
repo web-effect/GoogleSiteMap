@@ -47,7 +47,7 @@ $output = $modx->cacheManager->get($cacheKey, $options);
 if ($output !== null) return $output;
 
 /* Legacy Snippet handling */
-$legacyProps = $modx->getOption('legacyProps', $scriptProperties, 'allowedtemplates,excludeResources,excludeChildrenOf,sortByAlias,templateFilter,itemTpl,startId,where');
+$legacyProps = $modx->getOption('legacyProps', $scriptProperties, 'allowedtemplates, excludeResources, excludeChildrenOf, sortByAlias, templateFilter, itemTpl, maxDepth, startId, where');
 $legacyProps = array_flip(array_filter(array_map('trim', explode(',', $legacyProps))));
 $legacyProps = array_intersect_key($scriptProperties, $legacyProps);
 $legacySnippet = $modx->getOption('legacySnippet', $scriptProperties, 'GoogleSiteMapVersion1');
@@ -112,7 +112,7 @@ foreach ($context as $ctx) {
     $tablePrefix = $modx->getOption('table_prefix');
     
     $filters[] = "s.context_key = '{$ctx}'";
-    $criteria = implode(' AND ', array_filter($filters));
+    $criteria = implode(' AND ', $filters);
     $tvQuery = '';
     if ($priorityTV) $tvQuery = "IFNULL(
         CONCAT('<priority>',(

@@ -3,7 +3,7 @@
     ,"lowCaseName": "googlesitemap"
     ,"description": "Builds the Google SiteMap XML. Version 2+ of GoogleSiteMap uses code by Garry Nutting of the MODX Core Team to deliver sitemaps blazingly fast."
     ,"author": "Garry Nutting, YJ Tso"
-    ,"version": "2.0.1-rc2"
+    ,"version": "2.0.2-rc1"
     ,"package":{
         "elements": {
             "snippets": [{
@@ -24,7 +24,7 @@
                     {"name":"sortDir","description":"prop_gsm.sortdir_desc","type":"textfield","options":"","value":"ASC"},
                     {"name":"containerTpl","description":"prop_gsm.containertpl_desc","type":"textfield","options":"","value":"gContainer"},
                     {"name":"priorityTV","description":"prop_gsm.prioritytv_desc","type":"textfield","options":"","value":""},
-                    {"name":"legacyProps","description":"prop_gsm.legacyprops_desc","type":"textfield","options":"","value":"allowedtemplates, excludeResources, excludeChildrenOf, sortByAlias, templateFilter, itemTpl, startId, where"},
+                    {"name":"legacyProps","description":"prop_gsm.legacyprops_desc","type":"textfield","options":"","value":"allowedtemplates, excludeResources, excludeChildrenOf, sortByAlias, templateFilter, itemTpl, maxDepth, startId, where"},
                     {"name":"legacySnippet","description":"prop_gsm.legacysnippet_desc","type":"textfield","options":"","value":"GoogleSiteMapVersion1"}
                 ]
             },{
