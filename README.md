@@ -2,7 +2,7 @@
 
 Version: 2.0.2-rc1
 Created: Apr 13, 2016
-Author: YJ Tso <yj@modx.com>, Garry Nutting <garry@modx.com>
+Author: YJ Tso @sepiariver, Garry Nutting @garryn
 
 - Complete rewrite based on Garry's blazing fast sitemap code
 - Added cachemanager
