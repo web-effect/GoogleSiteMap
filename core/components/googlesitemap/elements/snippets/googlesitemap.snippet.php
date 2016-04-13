@@ -113,6 +113,15 @@ foreach ($context as $ctx) {
     
     $filters[] = "s.context_key = '{$ctx}'";
     $criteria = implode(' AND ', array_filter($filters));
+    $tvQuery = '';
+    if ($priorityTV) $tvQuery = "IFNULL(
+        CONCAT('<priority>',(
+            SELECT value
+            FROM " . $tablePrefix . "site_tmplvar_contentvalues
+            USE INDEX (tv_cnt)
+            WHERE contentid = s.id AND tmplvarid = " . $priorityTV . "
+        ),'</priority>'),''),";
+        
     // Add all resources that meet criteria
     $stmt = $modx->query("
         SELECT
@@ -120,13 +129,7 @@ foreach ($context as $ctx) {
                 '<url>',        
                 CONCAT('<loc>" . $siteUrl . "',uri,'</loc>'),
                 CONCAT('<lastmod>',CASE editedon WHEN 0 THEN FROM_UNIXTIME(publishedon, '%Y-%m-%d') ELSE FROM_UNIXTIME(editedon, '%Y-%m-%d') END,'</lastmod>'),
-                IFNULL(
-                    CONCAT('<priority>',(
-                        SELECT value
-                        FROM " . $tablePrefix . "site_tmplvar_contentvalues
-                        USE INDEX (tv_cnt)
-                        WHERE contentid = s.id AND tmplvarid = " . $priorityTV . "
-                    ),'</priority>'),''),
+                " . $tvQuery . "
                 '</url>'
                 SEPARATOR ''
             ) AS node
