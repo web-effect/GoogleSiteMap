@@ -28,9 +28,11 @@
 ini_set('max_execution_time', 0);
 
 // Set cache options
-$cacheKey = $modx->getoption('cacheKey', $scriptProperties, 'googlesitemap');
+// set $cacheKey prefix to be appended later
+$cacheKey = $modx->getoption('cachePrefix', $scriptProperties, 'googlesitemap');
+// subfolder of core/cache/
 $cachePartition = $modx->getoption('cachePartition', $scriptProperties, 'googlesitemap');
-$expires = $modx->getOption('expires', $scriptProperties, 86400);
+$expires = $modx->getOption('cacheExpires', $scriptProperties, 86400);
 $options = array(
   xPDO::OPT_CACHE_KEY => $cachePartition,
 );
@@ -65,11 +67,12 @@ $googleSchema = $modx->getOption('googleSchema',$scriptProperties,'http://www.si
 
 /* Map specified filter properties to new variables for convenience */
 $filters = array();
-$filters['deleted'] = ($modx->getOption('hideDeleted', $scriptProperties, true)) ? 's.deleted = 0' : false;
-$filters['hidemenu'] = ($modx->getOption('showHidden', $scriptProperties, false)) ? false : 's.hidemenu = 0';
-$filters['published'] = ($modx->getOption('published', $scriptProperties, true)) ? 's.published = 1' : false;
-$filters['searchable'] = ($modx->getOption('searchable', $scriptProperties, true)) ? 's.searchable = 1' : false;
+if ($modx->getOption('hideDeleted', $scriptProperties, true)) $filters[] =  's.deleted = 0';
+if (!$modx->getOption('showHidden', $scriptProperties, false)) $filters[] = 's.hidemenu = 0';
+if ($modx->getOption('published', $scriptProperties, true)) $filters[] = 's.published = 1';
+if ($modx->getOption('searchable', $scriptProperties, true)) $filters[] = 's.searchable = 1';
 
+/* Defaults from legacy snippet */
 $sortBy = $modx->getOption('sortBy', $scriptProperties, 'menuindex');
 $sortDir = $modx->getOption('sortDir', $scriptProperties, 'ASC');
 $orderby = 's.' . strtolower($sortBy) . ' ' . strtoupper($sortDir);
@@ -77,6 +80,7 @@ $orderby = 's.' . strtolower($sortBy) . ' ' . strtoupper($sortDir);
 $containerTpl = $modx->getOption('containerTpl', $scriptProperties, 'gContainer');
 $priorityTV = $modx->getOption('priorityTV', $scriptProperties, '');
 
+/* Fetch TV ID if string provided */
 if (!is_numeric($priorityTV)) {
     
     $c = $modx->newQuery('modTemplateVar');
@@ -105,7 +109,9 @@ foreach ($context as $ctx) {
         $siteUrl = $modx->getOption('site_url', null, MODX_SITE_URL);
     }
     
-    $filters['context_key'] = "context_key = '{$ctx}'";
+    $tablePrefix = $modx->getOption('table_prefix');
+    
+    $filters[] = "s.context_key = '{$ctx}'";
     $criteria = implode(' AND ', array_filter($filters));
     // Add all resources that meet criteria
     $stmt = $modx->query("
@@ -113,18 +119,18 @@ foreach ($context as $ctx) {
     	    GROUP_CONCAT(
                 '<url>',        
                 CONCAT('<loc>" . $siteUrl . "',uri,'</loc>'),
-                CONCAT('<lastmod>',FROM_UNIXTIME(editedon, '%Y-%m-%d'),'</lastmod>'),
+                CONCAT('<lastmod>',CASE editedon WHEN 0 THEN FROM_UNIXTIME(publishedon, '%Y-%m-%d') ELSE FROM_UNIXTIME(editedon, '%Y-%m-%d') END,'</lastmod>'),
                 IFNULL(
                     CONCAT('<priority>',(
                         SELECT value
-                        FROM modx_site_tmplvar_contentvalues
+                        FROM " . $tablePrefix . "site_tmplvar_contentvalues
                         USE INDEX (tv_cnt)
-                        WHERE contentid = id AND tmplvarid = " . $priorityTV . "
+                        WHERE contentid = s.id AND tmplvarid = " . $priorityTV . "
                     ),'</priority>'),''),
                 '</url>'
                 SEPARATOR ''
             ) AS node
-        FROM modx_site_content AS s
+        FROM " . $tablePrefix . "site_content AS s
         WHERE " . $criteria . "
         GROUP BY s.id
         ORDER BY " . $orderby . "
