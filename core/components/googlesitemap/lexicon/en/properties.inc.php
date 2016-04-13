@@ -47,3 +47,7 @@ $_lang['prop_gsm.itemtpl_desc'] = 'The Chunk to use for each result item.';
 $_lang['prop_gsm.containertpl_desc'] = 'The Chunk to use for the output container.';
 $_lang['prop_gsm.where_desc'] = 'Optional. A JSON object of parameters to pass into the where statement.';
 $_lang['prop_gsm.prioritytv_desc'] = 'Optional. The name or ID of a TV to use to override the priority for a page.';
+$_lang['prop_gsm.cacheprefix_desc'] = 'Optional. Default: "googlesitemap". Prefix for cache file(s).';
+$_lang['prop_gsm.cachepartition_desc'] = 'Optional. Default: "googlesitemap". Folder under core/cache/ for cache file(s).';
+$_lang['prop_gsm.cacheexpires_desc'] = 'Optional. Default: 86400. Time to expire cache. Default is 1 day.';
+$_lang['prop_gsm.legacyprops_desc'] = 'Only modify this if you really know what you are doing. Properties in this list will trigger the execution of the legacy GoogleSiteMap Snippet.';
