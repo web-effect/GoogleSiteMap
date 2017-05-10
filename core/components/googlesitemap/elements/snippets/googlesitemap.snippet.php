@@ -71,6 +71,7 @@ if ($modx->getOption('hideDeleted', $scriptProperties, true)) $filters[] =  's.d
 if (!$modx->getOption('showHidden', $scriptProperties, false)) $filters[] = 's.hidemenu = 0';
 if ($modx->getOption('published', $scriptProperties, true)) $filters[] = 's.published = 1';
 if ($modx->getOption('searchable', $scriptProperties, true)) $filters[] = 's.searchable = 1';
+if ($modx->getOption('exclude', $scriptProperties, false)) $filters[] = 's.id NOT IN ('.$scriptProperties['exclude'].')';
 
 /* Defaults from legacy snippet */
 $sortBy = $modx->getOption('sortBy', $scriptProperties, 'menuindex');
